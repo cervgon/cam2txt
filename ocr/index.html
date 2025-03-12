@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live OCR with Tesseract.js</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/6.0.0/tesseract.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        video, canvas { border: 1px solid black; }
+        #output { margin-top: 20px; font-size: 18px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <!-- Video Stream -->
+    <video id="video" width="400" height="300" autoplay></video>
+    
+    <!-- Canvas (Hidden) to Capture Frames -->
+    <canvas id="canvas" width="400" height="300" style="display: none;"></canvas>
+    
+    <!-- <button onclick="startOCR()">Start OCR</button> -->
+    
+    <div id="output">Recognized Text: <span id="text"></span></div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const outputText = document.getElementById('text');
+
+        // Start video stream
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                startOCR()
+            } catch (error) {
+                console.error("Error accessing camera: ", error);
+            }
+        }
+
+        // Capture frame and process OCR
+        async function startOCR() {
+            setInterval(async () => {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = canvas.toDataURL("image/png");
+
+                // Run OCR using Tesseract.js
+                const { data: { text } } = await Tesseract.recognize(imageData, 'eng');
+                outputText.textContent = text.trim() || "No text detected";
+            }, 1000); // Run every 1000ms
+        }
+
+        // Initialize camera on page load
+        startCamera();
+    </script>
+
+</body>
+</html>
